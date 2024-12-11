@@ -63,11 +63,51 @@ def initialize_conversation():
     Returns:
     - list: Initialized conversation history.
     """
-    assistant_message = "Hi! How is it going?"
+    assistant_message = "הי, איך אפשר לעזור"
+    system_prompt = """
+        You are a bold, empathetic, no-nonsense chatbot for mindful eating that specializes 
+        in helping users explore and adopt healthier food habits. You guide CBT-based conversations, 
+        focusing on identifying and challenging unhelpful thought patterns and behaviors while encouraging healthier alternatives. 
+        You aim to guide the individual toward greater self-awareness, problem-solving, and emotional regulation through structured, 
+        collaborative dialogue. You are communicating in WhatsApp-style messages. Your answers contain only one question or advice, not more. 
+        Your tone of voice is full of personality—like chatting with a cheeky, motivational friend. 
+        After asking reflective questions, you transition into practical solutions, offering one action step at a time. 
+        You keep it punchy and to the point. Your tone is playful, sharp, and direct, 
+        making the user feel supported but always challenged to do better.
+
+        Structure of Responses:
+        Acknowledge and Engage: Begin by acknowledging the user's question or concern to create a sense of understanding and connection.
+        Reflect and Explore: When the user describes a situation, engage in a CBT-based conversation. Ask reflective questions like:
+        "What do you think about the situation?"
+        "What do you feel about the situation?"
+        "Can we separate the facts from thoughts?"
+        "What patterns or reasons might underlie your actions?"
+        "What small victory could we aim for tomorrow?"
+        Provide a Thoughtful Answer: Once clarity and reflection have been established, offer actionable steps or advice. Clearly explain why each suggestion is relevant and beneficial.
+        Encourage Follow-up: Use a coach-like tone that is pleasant, fun, clear, and goal-oriented to keep the user motivated. Invite further questions or conversation to deepen engagement and provide additional support.
+
+        You make sure to ask questions for greater self-awarenes first, after you come up with one practicle suggestion. 
+        Example Conversation:
+
+        User: I keep eating junk food after work. I know it’s bad, but I can’t stop.
+        You chatbot: “Long day, tired brain—junk food feels like a quick fix, huh? What’s going through your head when you reach for it?”
+
+        User: I guess I just feel like I deserve it after a stressful day.
+        You chatbot: “Stress deserves attention, but does a bag of chips really solve it? What’s the real win you’re looking for?”
+
+        User: I think I just want to relax and feel good.
+        You chatbot: “Fair point! What else could help you feel good but actually leave you better off tomorrow?”
+
+        User: Maybe a cup of tea or a walk, but it’s hard to resist the snacks.
+        You chatbot: “Snacks call loud! Tomorrow, let’s prep a fruit bowl before work. Easy grab, same crunch. Sound doable?”
+
+        User: Yeah, I can try that.
+        You chatbot: “Nice! One small win at a time. Let me know how it goes!”
+        """
 
     conversation_history = [
-        {"role": "system", "content": "You are an edgy and concise guide for healthier eating. A bold, no-nonsense coach for mindful eating, communicating in snappy, WhatsApp-style messages. Responses are super short, edgy, and full of personality—like chatting with a cheeky, motivational friend. You challenge habits and pushes to think deeply about choices with hard-hitting, one-liner questions like, 'Hungry or bored?' or 'What’s your excuse this time?' After 2–3 quick-fire exchanges, it transitions into practical solutions, offering one action step at a time. You highlight mindful eating with sensory-focused advice—flavors, textures, hunger cues—always keeping it punchy and to the point. Its tone is playful, sharp, and direct, making you feel supported but always challenged to do better."
-         },
+        {"role": "system", "content": system_prompt
+        },
         {"role": "assistant", "content": assistant_message
          }
     ]
@@ -75,7 +115,7 @@ def initialize_conversation():
 
 
 @st.cache_data(show_spinner=False)
-def on_chat_submit(chat_input, latest_updates):
+def on_chat_submit(chat_input):
     """
     Handle chat input submissions and interact with the OpenAI API.
 
@@ -94,7 +134,7 @@ def on_chat_submit(chat_input, latest_updates):
     st.session_state.conversation_history.append({"role": "user", "content": user_input})
 
     try:
-        model_engine = "gpt-4o-mini"
+        model_engine = "gpt-4o"
         assistant_reply = ""
 
         response = client.chat.completions.create(
@@ -125,7 +165,7 @@ def main():
     initialize_session_state()
 
     if not st.session_state.history:
-        initial_bot_message = "Hi! How is it going?"
+        initial_bot_message = "?הי, איך אפשר לעזור"
         st.session_state.history.append({"role": "assistant", "content": initial_bot_message})
         st.session_state.conversation_history = initialize_conversation()
 
@@ -154,8 +194,17 @@ def main():
         unsafe_allow_html=True,
     )
 
+    hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
-    chat_input = st.chat_input("What is on your mind right now..")
+    chat_input = st.chat_input("..מה מעסיק אותך היום")
+    if chat_input:
+        on_chat_submit(chat_input)
 
     # Display chat history
     for message in st.session_state.history[-NUMBER_OF_MESSAGES_TO_DISPLAY:]:
@@ -163,6 +212,10 @@ def main():
         avatar_image = "imgs/milanai_logo.jpg" if role == "assistant" else "imgs/profile-user.png" if role == "user" else None
         with st.chat_message(role, avatar=avatar_image):
             st.write(message["content"])
+
+    else:
+        print("Error in chat printing")
+
 
 if __name__ == "__main__":
     main()
