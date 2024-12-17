@@ -30,12 +30,7 @@ st.set_page_config(
     page_icon="imgs/milanai_logo.jpg",
     layout="wide",
     initial_sidebar_state="collapsed"
-    footer=False
 )
-
-# Your app code here
-st.title("My Streamlit App")
-st.write("This app is embedded in an iframe.")
 
 def img_to_base64(image_path):
     """Convert image to base64."""
