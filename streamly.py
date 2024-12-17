@@ -30,7 +30,12 @@ st.set_page_config(
     page_icon="imgs/milanai_logo.jpg",
     layout="wide",
     initial_sidebar_state="collapsed"
+    footer=False
 )
+
+# Your app code here
+st.title("My Streamlit App")
+st.write("This app is embedded in an iframe.")
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -187,14 +192,6 @@ def main():
         """,
         unsafe_allow_html=True,
     )
-
-    hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            </style>
-            """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 
     chat_input = st.chat_input("..מה מעסיק אותך היום")
     if chat_input:
