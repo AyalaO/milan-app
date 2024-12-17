@@ -140,6 +140,7 @@ def on_chat_submit(chat_input):
         st.session_state.conversation_history.append({"role": "assistant", "content": assistant_reply})
         st.session_state.history.append({"role": "user", "content": user_input})
         st.session_state.history.append({"role": "assistant", "content": assistant_reply})
+        print(st.session_state.history)
 
     except OpenAIError as e:
         logging.error(f"Error occurred: {e}")
