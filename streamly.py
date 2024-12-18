@@ -1,20 +1,25 @@
 import openai
+from openai import OpenAI, OpenAIError
 import streamlit as st
 import logging
 from PIL import Image, ImageEnhance
 import time
-import json
-import requests
 import base64
-from openai import OpenAI, OpenAIError
+import pygsheets
+import pandas as pd
+from streamlit_gsheets import GSheetsConnection
+from datetime import datetime
+import uuid
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Streamlit Page Configuration
+st.set_page_config(
+    page_title="Milan AI",
+    page_icon="imgs/logo.jpg",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
 
-# Constants
-NUMBER_OF_MESSAGES_TO_DISPLAY = 20
-
-# Retrieve and validate API key
+# Retrieve and validate API keys
 OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
 if not OPENAI_API_KEY:
     st.error("Please add your OpenAI API key to the Streamlit secrets.toml file.")
@@ -24,13 +29,14 @@ if not OPENAI_API_KEY:
 openai.api_key = OPENAI_API_KEY
 client = openai.OpenAI()
 
-# Streamlit Page Configuration
-st.set_page_config(
-    page_title="Milan AI",
-    page_icon="imgs/milanai_logo.jpg",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+# Create a connection object for google sheet
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# Constants
+NUMBER_OF_MESSAGES_TO_DISPLAY = 20
 
 def img_to_base64(image_path):
     """Convert image to base64."""
@@ -140,7 +146,6 @@ def on_chat_submit(chat_input):
         st.session_state.conversation_history.append({"role": "assistant", "content": assistant_reply})
         st.session_state.history.append({"role": "user", "content": user_input})
         st.session_state.history.append({"role": "assistant", "content": assistant_reply})
-        print(st.session_state.history)
 
     except OpenAIError as e:
         logging.error(f"Error occurred: {e}")
@@ -151,7 +156,29 @@ def initialize_session_state():
     if "history" not in st.session_state:
         st.session_state.history = []
     if 'conversation_history' not in st.session_state:
-        st.session_state.conversation_history = []
+        st.session_state.conversation_history = []  
+    if 'session_id' not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+
+@st.cache_data(show_spinner=False)
+def log_conversation(latest_chat_state):
+    # format logs
+    latest_chat_state_clean = [interaction['role']+' : '+interaction['content'] for interaction in latest_chat_state]
+    new_log_entry = [datetime.now().strftime("%Y/%m/%d %H:%M:%S"), 
+                    st.session_state.session_id, 
+                    latest_chat_state_clean]
+    # read in sheet
+    df_logs = conn.read(worksheet="Sheet1", usecols=[0,1,2], ttl=0)
+    index_session = df_logs.index[df_logs['session_id'] == st.session_state.session_id].tolist()
+    if not index_session:
+        # session not logged before yet, append logs on new row
+        df_logs.loc[len(df_logs)] = new_log_entry
+    else:
+        # session already logged before, replace existing row
+        df_logs.loc[index_session] = new_log_entry
+    # write to sheet        
+    conn.update(data=df_logs)
+
 
 def main():
     """
@@ -196,12 +223,16 @@ def main():
     # Display chat history
     for message in st.session_state.history[-NUMBER_OF_MESSAGES_TO_DISPLAY:]:
         role = message["role"]
-        avatar_image = "imgs/milanai_logo.jpg" if role == "assistant" else "imgs/profile-user.png" if role == "user" else None
+        avatar_image = "imgs/logo.jpg" if role == "assistant" else "imgs/profile-user.png" if role == "user" else None
         with st.chat_message(role, avatar=avatar_image):
             st.write(message["content"])
 
     else:
         print("Error in chat printing")
+
+    # log conversations
+    if len(st.session_state.history) > 1:
+        log_conversation(st.session_state.history)
 
 
 if __name__ == "__main__":
