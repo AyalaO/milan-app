@@ -18,6 +18,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+hide_streamlit_style = """
+            <style>
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
+
 # Retrieve and validate API keys
 OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
 if not OPENAI_API_KEY:
