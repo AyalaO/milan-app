@@ -3,4 +3,7 @@ streamlit-chat
 openai
 requests
 Image
-langchain
+langchain 
+st-gsheets-connection
+streamlit-gsheets
+pandas
