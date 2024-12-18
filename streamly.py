@@ -14,7 +14,7 @@ import uuid
 # Streamlit Page Configuration
 st.set_page_config(
     page_title="Milan AI",
-    page_icon="imgs/logo.jpg",
+    page_icon="imgs/milanai_logo.jpg",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -223,14 +223,14 @@ def main():
     # Display chat history
     for message in st.session_state.history[-NUMBER_OF_MESSAGES_TO_DISPLAY:]:
         role = message["role"]
-        avatar_image = "imgs/logo.jpg" if role == "assistant" else "imgs/profile-user.png" if role == "user" else None
+        avatar_image = "imgs/milanai_logo.jpg" if role == "assistant" else "imgs/profile-user.png" if role == "user" else None
         with st.chat_message(role, avatar=avatar_image):
             st.write(message["content"])
 
     else:
         print("Error in chat printing")
 
-    # log conversations
+    # Log conversations
     if len(st.session_state.history) > 1:
         log_conversation(st.session_state.history)
 
