@@ -5,7 +5,6 @@ import logging
 from PIL import Image, ImageEnhance
 import time
 import base64
-import pygsheets
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 from datetime import datetime
