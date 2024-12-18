@@ -5,5 +5,4 @@ requests
 Image
 langchain 
 st-gsheets-connection
-streamlit-gsheets
 pandas
